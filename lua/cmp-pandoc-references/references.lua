@@ -1,12 +1,11 @@
 local cmp = require 'cmp'
 
-local entries = {}
 local M = {}
 
 -- (Crudely) Locates the bibliography
 local function locate_bib(lines)
 	for _, line in ipairs(lines) do
-		location = string.match(line, 'bibliography: (%g+)')
+		local location = string.match(line, 'bibliography: (%g+)')
 		if location then
 			return location
 		end
@@ -25,8 +24,9 @@ end
 
 -- Parses the .bib file, formatting the completion item
 -- Adapted from http://rgieseke.github.io/ta-bibtex/
-local function parse_bib(filename)
+local function parse_bib(filename, entries)
 	local file = io.open(filename, 'rb')
+  if file == nil then return end
 	local bibentries = file:read('*all')
 	file:close()
 	for bibentry in bibentries:gmatch('@.-\n}\n') do
@@ -50,7 +50,7 @@ local function parse_bib(filename)
 end
 
 -- Parses the references in the current file, formatting for completion
-local function parse_ref(lines)
+local function parse_ref(lines, entries)
 	local words = table.concat(lines)
 	for ref in words:gmatch('{#(%a+:[%w_-]+)') do
 		local entry = {}
@@ -61,14 +61,14 @@ local function parse_ref(lines)
 end
 
 -- Returns the entries as a table, clearing entries beforehand
-function M.get_entries(lines)
-	local location = locate_bib(lines)
-	entries = {}
+function M.get_entries(lines, default_bib_path)
+	local location = locate_bib(lines) or default_bib_path
+	local entries = {}
 
 	if location and vim.fn.filereadable(location) == 1 then
-		parse_bib(location)
+		parse_bib(location, entries)
 	end
-	parse_ref(lines)
+	parse_ref(lines, entries)
 
 	return entries
 end
