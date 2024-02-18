@@ -18,14 +18,11 @@ function M.get_keyword_pattern()
 	return '[@][^[:blank:]]*'
 end
 
-function M.complete(self, request, callback)
-  local lines = vim.api.nvim_buf_get_lines(self.bufnr or 0, 0, -1, false)
+function M.complete(self, params, callback)
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   local entries = refs.get_entries(lines, opts.bib_path)
 
-  if entries then
-    self.items = entries
-    callback(self.items)
-  end
+  callback(entries)
 end
 
 return M
